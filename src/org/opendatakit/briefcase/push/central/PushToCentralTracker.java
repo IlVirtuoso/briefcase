@@ -18,6 +18,7 @@ package org.opendatakit.briefcase.push.central;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opendatakit.briefcase.push.central.CentralErrorMessage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Consumer;
@@ -43,23 +44,11 @@ class PushToCentralTracker {
   }
 
   // TODO v2.0 Move this factory to the CentralErrorMessage class
-  private static CentralErrorMessage parseErrorResponse(String errorResponse) {
-    if (errorResponse.isEmpty())
-      return CentralErrorMessage.empty();
-    try {
-      ObjectMapper mapper = new ObjectMapper();
-      JsonNode jsonNode = mapper.readTree(errorResponse);
-      String message = jsonNode.get("message").asText();
 
-      return new CentralErrorMessage(message);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
 
   void trackErrorCheckingForm(Response response) {
     errored = true;
-    CentralErrorMessage centralErrorMessage = parseErrorResponse(response.getServerErrorResponse());
+    CentralErrorMessage centralErrorMessage = CentralErrorMessage.parseErrorResponse(response.getServerErrorResponse());
     String message = "Error checking if form exists in Aggregate";
     form.setStatusString(message + ": " + response.getStatusPhrase());
     log.error("Push {} - {}: HTTP {} {} {}", form.getFormName(), message, response.getStatusCode(), response.getStatusPhrase(), centralErrorMessage.message);

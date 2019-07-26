@@ -15,6 +15,10 @@
  */
 
 package org.opendatakit.briefcase.push.central;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 class CentralErrorMessage {
   final String message;
@@ -25,5 +29,18 @@ class CentralErrorMessage {
 
   public static CentralErrorMessage empty() {
     return new CentralErrorMessage("");
+  }
+  public static CentralErrorMessage parseErrorResponse(String errorResponse) {
+    if (errorResponse.isEmpty())
+      return CentralErrorMessage.empty();
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode jsonNode = mapper.readTree(errorResponse);
+      String message = jsonNode.get("message").asText();
+
+      return new CentralErrorMessage(message);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }
